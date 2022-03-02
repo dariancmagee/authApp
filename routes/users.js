@@ -1,23 +1,23 @@
 var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcrypt');
-const saltRounds = 10;
+const saltRounds = process.env.SALT_ROUNDS
 const Sequelize = require('sequelize');
 const { Users } = require('../models');
 
+console.log("user.js salt rounds are:", saltRounds);
 
 /* GET users listing. */
 router.get('/', async function(req, res, next) {
-  //res.send('respond with a resource');
-  const users = await Users.findAll()
-  res.json(users)
+  res.render("index");
+  // const users = await Users.findAll()
+  // res.json(users)
 });
 
 router.post('/', (req, res, next) => {
 
   const password = "hello"
 
-  const saltRounds = bcrypt.genSaltSync(5);
   const hash = bcrypt.hashSync(password, saltRounds);
 
   console.log("my password", password);
@@ -46,24 +46,34 @@ router.post("/register", async (req, res, next) => {
   console.log("added new user:", username, password, email);
 });
 
-router.post('/login', (req, res, next) => {
-
-  const password = "last dragon";
-  const wrongPassword = "not last dragon";
+router.post('/login', async (req, res, next) => {
+  const {username, password} = req.body;
 
   const saltRounds = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(password, saltRounds);
-  const comparePass = bcrypt.compareSync(password, hash);
-  const wrongComparePass = bcrypt.compareSync(wrongPassword, hash);
-
   
-  console.log("my password", password);
-  console.log("my hashed password", hash);
-  console.log("Is password correct", comparePass);
-  console.log("Is passowrd correct", wrongComparePass);
+  const users = await Users.findOne({
+    where: {
+      username: username
+    }
+  });
+  
+  const dbPassword = users.password;
+  console.log("db password", dbPassword);
+  console.log("hashed Password", hash);
+  const comparePass = bcrypt.compareSync(password, dbPassword);
+  
+  console.log("compare", comparePass);
+  
+  if (comparePass) {
+    console.log("Authorized")
+  } else {
+    console.log("No user found");
+  }
+  
+  res.json(users);
 
-res.send("Passowrd Checker");
-
+  console.log(users);
 
 });
 

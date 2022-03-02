@@ -3,6 +3,41 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
+
+// get config vars
+dotenv.config();
+
+const secretKey = process.env.SECRET_KEY;
+
+console.log("Salt Rounds are:", process.env.SALT_ROUNDS);
+
+console.log("SECRET KEY is", secretKey);
+
+const token = jwt.sign({
+  data: 'Unleash the Kraken',
+}, 
+secretKey, // hide from everyone but our app 
+  { expiresIn: '1h' });
+
+console.log(token);
+
+
+// verify a token
+jwt.verify(
+  token,
+  secretKey,
+  function (err, decoded) {
+    console.log("Decoded", decoded); // will show our token
+  }
+);
+
+
+
+
+
+
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
