@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = process.env.SALT_ROUNDS
 const Sequelize = require('sequelize');
 const { Users } = require('../models');
+const jwt = require('jsonwebtoken');
 
 console.log("user.js salt rounds are:", saltRounds);
 
@@ -66,9 +67,18 @@ router.post('/login', async (req, res, next) => {
   console.log("compare", comparePass);
   
   if (comparePass) {
-    console.log("Authorized")
+    const token = jwt.sign({
+      data: username,
+    }, 
+    secretKey, // hide from everyone but our app 
+      { expiresIn: '1h' });
+    
+    console.log('Password worked!', token);
+    res.cookie('token', token);
+    res.redirect('/');
   } else {
-    console.log("No user found");
+    console.log('Password did not work');
+    res.send("Not authorized")
   }
   
   res.json(users);
